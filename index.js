@@ -72,7 +72,7 @@ app.post("/contatos", (req, res) => {
 
     res.status(201).json({
         message: "Contato adicionado com sucesso!",
-        contatos: contatos[index]
+        contatos: novoContato
     });
 });
 
@@ -172,7 +172,7 @@ app.post("/catalogo", (req, res) => {
 
     res.status(201).json({
         message: "Produto adicionado com sucesso!",
-        produto: catalogo[index]
+        produto: novoCatalogo
     });
 });
 
@@ -190,7 +190,7 @@ app.put("/catalogo/:index", (req, res) => {
         return res.status(400).json({ error: "Nome e Preço é obrigatório." });
     }
 
-    catalogo[index].preco = preco; // Atualiza o preço somente se ele foi fornecido
+    catalogo[index].preco = preco;
     catalogo[index].nome = nome;
 
     res.status(200).json({
@@ -275,7 +275,7 @@ app.post("/tarefas", (req, res) => {
 
     res.status(201).json({
         message: "Tarefa adicionado com sucesso!",
-        tarefas: tarefas[index]
+        tarefas: novoTarefa
     });
 });
 
@@ -283,7 +283,6 @@ app.put("/tarefas/:index", (req, res) => {
     const { tarefa, status } = req.body;
     const index = parseInt(req.params.index);
 
-    // Verifica se o índice é válido
     if (isNaN(index) || index < 0 || index >= tarefas.length) {
         return res.status(404).json({ error: "Tarefa não encontrada." });
     }
@@ -372,51 +371,61 @@ let livros = [
     }
 ];
 
+app.get("/biblioteca-all", (req, res) => {
+    res.json(livros);
+});
+
 app.get("/biblioteca", (req, res) => {
     res.json(livros.filter(livro => livro.disponibilidade));
     // é uma função própria para arrays que irá percorrer todos no array e procurar por livro.disponibilidade que por natureza irá representar se for true ou não já que se tiver valor é true
 });
 
 app.post("/biblioteca", (req, res) => {
-    const { tarefa, status } = req.body;
+    const { titulo, autor, disponibilidade } = req.body;
 
-    if (!tarefa || !status) {
-        return res.status(400).json({ error: "Tarefa e Status são obrigatórios." });
+    if (!titulo || !autor || disponibilidade === undefined) {
+        // usando undefined que é indefinido ao envez de ! por que quando colocado !disponibilidade ele irá reconhecer como false
+        return res.status(400).json({ error: "Titulo, Autor e Disponibilidade são obrigatórios." });
     }
 
-    const novoTarefa = { tarefa, status };
-    livros.push(novoTarefa);
+    if (disponibilidade !== true && disponibilidade !== false) {
+        return res.status(400).json({ error: "Disponibilidade precisa ser true ou false." });
+    }
+
+    const novoLivro = { titulo, autor, disponibilidade };
+    livros.push(novoLivro);
 
     res.status(201).json({
-        message: "Tarefa adicionado com sucesso!",
-        livros: livros[index]
+        message: "Livro adicionado com sucesso!",
+        livros: novoLivro
     });
 });
 
 app.put("/biblioteca/:index", (req, res) => {
-    const { tarefa, status } = req.body;
+    const { titulo, autor, disponibilidade } = req.body;
     const index = parseInt(req.params.index);
 
     // Verifica se o índice é válido
     if (isNaN(index) || index < 0 || index >= livros.length) {
-        return res.status(404).json({ error: "Tarefa não encontrada." });
+        return res.status(404).json({ error: "Livro não encontrado." });
     }
 
-    if (!tarefa || !status) {
-        return res.status(400).json({ error: "Tarefa e Status são obrigatório." });
+    if (!titulo || !autor || disponibilidade === undefined) {
+        return res.status(400).json({ error: "Titulo, Autor e Disponibilidade são obrigatórios." });
     }
 
-    if (status == false || status == true){
-        livros[index].status = status;
+    if (disponibilidade == false || disponibilidade == true) {
+        livros[index].disponibilidade = disponibilidade;
     } else {
-        return res.status(400).json({ error: "Status tem que ser true ou false." });
+        return res.status(400).json({ error: "Disponibilidade tem que ser true ou false." });
     }
 
-    livros[index].tarefa = tarefa;
+    livros[index].titulo = titulo;
+    livros[index].autor = autor;
 
     res.status(200).json({
-        message: "Tarefa atualizada com sucesso!",
-        produto: livros.filter(livro => livro.disponibilidade)
+        message: "Livro atualizado com sucesso!",
+        livros: livros.filter(livro => livro.disponibilidade)
     });
 });
 
@@ -424,7 +433,7 @@ app.delete("/biblioteca/:index", (req, res) => {
     const index = parseInt(req.params.index);
 
     if (isNaN(index) || index < 0 || index >= livros.length) {
-        return res.status(404).json({ error: "Tarefa não encontrada." });
+        return res.status(404).json({ error: "Livro não encontrado." });
     }
 
     livros.splice(index, 1);
